@@ -1,28 +1,30 @@
+import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
+type Props = {
+  anyOf: string[]; // permisos requeridos (OR)
+  children: ReactNode;
+  redirectTo?: string; // por defecto "/forbidden"
+};
+
 export default function RequirePermission({
-  perm,
+  anyOf,
   children,
-}: {
-  perm: string;
-  children: JSX.Element;
-}) {
-  const { hasPermission, loading } = useAuth();
+  redirectTo = "/forbidden",
+}: Props) {
+  const { user, loading, hasAnyPermission } = useAuth();
 
-  if (loading) return <div style={{ padding: 24 }}>Cargando...</div>;
+  if (loading) return null;
 
-  if (!hasPermission(perm)) {
-    return (
-      <div style={{ padding: 24 }}>
-        <h2 style={{ marginTop: 0 }}>Acceso denegado</h2>
-        <p style={{ opacity: 0.8 }}>
-          No tienes permiso: <b>{perm}</b>
-        </p>
-        <Navigate to="/" replace />
-      </div>
-    );
-  }
+  // seguridad extra
+  if (!user) return <Navigate to="/login" replace />;
 
-  return children;
+  // ADMIN bypass recomendado
+  if (user.roles?.includes("ADMIN")) return <>{children}</>;
+
+  const allowed = hasAnyPermission(anyOf);
+  if (!allowed) return <Navigate to={redirectTo} replace />;
+
+  return <>{children}</>;
 }

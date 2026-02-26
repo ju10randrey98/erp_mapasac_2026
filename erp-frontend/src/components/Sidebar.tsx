@@ -6,25 +6,32 @@ type NavItem = {
   label: string;
   to: string;
   perms?: string[];
-  icon?: string; // simple: emoji (luego lo cambiamos por icons pro)
+  icon?: string;
 };
 
 export default function Sidebar() {
   const { hasAnyPermission, user } = useAuth();
   const { sidebarCollapsed } = useLayout();
 
+  const isAdmin = !!user?.roles?.includes("ADMIN");
+
   const items: NavItem[] = [
     { label: "Dashboard", to: "/", icon: "🏠" },
     { label: "Usuarios", to: "/users", perms: ["users.read"], icon: "👤" },
     { label: "Productos", to: "/products", perms: ["products.read"], icon: "📦" },
     { label: "Inventario", to: "/inventory", perms: ["inventory.read"], icon: "📊" },
+
+    // ✅ Auditoría
+    { label: "Auditoría", to: "/audit", perms: ["audit.read"], icon: "🧩" },
   ];
 
   const canSee = (item: NavItem) => {
+    if (isAdmin) return true;
     if (!item.perms || item.perms.length === 0) return true;
     return hasAnyPermission(item.perms);
   };
 
+  const filtered = items.filter(canSee);
   const width = sidebarCollapsed ? 76 : 240;
 
   return (
@@ -40,13 +47,12 @@ export default function Sidebar() {
         transition: "width 160ms ease",
       }}
     >
-      {/* encabezado del sidebar */}
       <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 10, height: 18 }}>
         {!sidebarCollapsed ? user?.roles?.join(", ") ?? "" : ""}
       </div>
 
       <nav style={{ display: "grid", gap: 6 }}>
-        {items.filter(canSee).map((item) => (
+        {filtered.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

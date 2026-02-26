@@ -3,6 +3,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ChangePassword from "./pages/ChangePassword";
 import Users from "./pages/Users";
+import Forbidden from "./pages/Forbidden";
+import Audit from "./pages/Audit";
 
 import ProtectedRoute from "./auth/ProtectedRoute";
 import RequirePermission from "./auth/RequirePermission";
@@ -27,6 +29,15 @@ function App() {
           />
 
           <Route
+            path="/forbidden"
+            element={
+              <ProtectedRoute>
+                <Forbidden />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/"
             element={
               <ProtectedRoute>
@@ -39,8 +50,17 @@ function App() {
             <Route
               path="users"
               element={
-                <RequirePermission perm="users.read">
+                <RequirePermission anyOf={["users.read"]} redirectTo="/forbidden">
                   <Users />
+                </RequirePermission>
+              }
+            />
+
+            <Route
+              path="audit"
+              element={
+                <RequirePermission anyOf={["audit.read"]} redirectTo="/forbidden">
+                  <Audit />
                 </RequirePermission>
               }
             />
